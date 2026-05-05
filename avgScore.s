@@ -11,6 +11,7 @@ str4: .asciiz "Enter the number of (lowest) scores to drop: "
 str5: .asciiz "Average (rounded down) with dropped scores removed: "
 space: .asciiz " "
 new_line: .asciiz "\n"
+str_all: .asciiz "All scores dropped!\n"
 
 .text 
 
@@ -31,12 +32,16 @@ user_prompt:
 	syscall 
 	li $v0, 5	# Read the number of scores from user
 	syscall
-	li $t0,1
-	blt $v0, $t0, user_prompt
-	li $t0,25
-	bgt $v0,$t0,user_prompt
-
 	# Your code here to handle invalid number of scores (can't be less than 1 or greater than 25)
+
+	li $t0,1
+	slt $t1, $v0, $t0
+	bne $t1, $zero, user_prompt
+
+	li $t0,25
+	slt $t1, $t0, $v0
+	bne $t1,$zero,user_prompt
+
 	
 	move $s0, $v0	# $s0 = numScores
 	move $t0, $0
@@ -68,16 +73,23 @@ loop_in:
 	syscall 
 	move $a0, $s2	# More efficient than la $a0, sorted
 	jal printArray	# Print sorted scores
-	
+
+valid_prompt:
 	li $v0, 4 
 	la $a0, str4 
 	syscall 
 	li $v0, 5	# Read the number of (lowest) scores to drop
 	syscall
-	
 	# Your code here to handle invalid number of (lowest) scores to drop (can't be less than 0, or 
 	# greater than the number of scores). Also, handle the case when number of (lowest) scores to drop 
 	# equals the number of scores. 
+	
+	slt $t0,$v0,$zero
+	bne $t1, $zero, valid_prompt
+	slt $t0, $s0, $v0
+	bne $t1, $zero, valid_prompt
+	beq $v0,$s0,equalScore
+	
 	
 	move $a1, $v0
 	sub $a1, $s0, $a1	# numScores - drop
@@ -86,7 +98,11 @@ loop_in:
 	
 	# Your code here to compute average and print it (you may also end up having some code here to help 
 	# handle the case when number of (lowest) scores to drop equals the number of scores
-	
+equalScore:
+	li $v0,4
+    la $a0,str_all    
+    syscall
+    j end
 end:	lw $ra, 0($sp)
 	addi $sp, $sp 4
 	li $v0, 10 
