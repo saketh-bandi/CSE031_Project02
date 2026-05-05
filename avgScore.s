@@ -25,12 +25,17 @@ new_line: .asciiz "\n"
 main: 
 	addi $sp, $sp -4
 	sw $ra, 0($sp)
+user_prompt:
 	la $a0, str0 
 	li $v0, 4 
 	syscall 
 	li $v0, 5	# Read the number of scores from user
 	syscall
-	
+	li $t0,1
+	blt $v0, $t0, user_prompt
+	li $t0,25
+	bgt $v0,$t0,user_prompt
+
 	# Your code here to handle invalid number of scores (can't be less than 1 or greater than 25)
 	
 	move $s0, $v0	# $s0 = numScores
