@@ -144,7 +144,69 @@ post_print:
 # It performs SELECTION sort in descending order and populates the sorted array
 selSort:
 	# Your implementation of selSort here
+	la $t0, orig		# $t0 = base address of orig
+	la $t1, sorted		# $t1 = base address of sorted
+	addi $t2, $zero, 0	# $t2 = i
+
+copy_loop:
+	slt $t3, $t2, $a0	# while (i < len)
+	beq $t3, $zero, sort_setup
+	sll $t4, $t2, 2
+	add $t5, $t0, $t4
+	lw $t6, 0($t5)
+	add $t7, $t1, $t4
+	sw $t6, 0($t7)
+	addi $t2, $t2, 1
+	j copy_loop
+
+sort_setup:
+	slti $t3, $a0, 2	# Arrays of size 0 or 1 are already sorted
+	bne $t3, $zero, sel_done
+	addi $t2, $zero, 0	# i = 0
+
+outer_loop:
+	addi $t3, $a0, -1
+	slt $t4, $t2, $t3	# while (i < len - 1)
+	beq $t4, $zero, sel_done
+	add $t5, $t2, $zero	# maxIndex = i
+	addi $t6, $t2, 1	# j = i + 1
+
+inner_loop:
+	slt $t3, $t6, $a0	# while (j < len)
+	beq $t3, $zero, do_swap
+	sll $t4, $t6, 2
+	add $t7, $t1, $t4
+	lw $t8, 0($t7)		# sorted[j]
+	sll $t4, $t5, 2
+	add $t9, $t1, $t4
+	lw $t3, 0($t9)		# sorted[maxIndex]
+	slt $t4, $t3, $t8	# if sorted[maxIndex] < sorted[j]
+	bne $t4, $zero, update_max
+	j next_j
+
+update_max:
+	add $t5, $t6, $zero	# maxIndex = j
+
+next_j:
+	addi $t6, $t6, 1
+	j inner_loop
+
+do_swap:
+	beq $t5, $t2, next_i	# No swap needed if maxIndex == i
+	sll $t4, $t2, 2
+	add $t7, $t1, $t4
+	lw $t8, 0($t7)		# temp = sorted[i]
+	sll $t4, $t5, 2
+	add $t9, $t1, $t4
+	lw $t3, 0($t9)		# sorted[maxIndex]
+	sw $t3, 0($t7)
+	sw $t8, 0($t9)
+
+next_i:
+	addi $t2, $t2, 1
+	j outer_loop
 	
+sel_done:
 	jr $ra
 	
 	
