@@ -11,7 +11,7 @@ str4: .asciiz "Enter the number of (lowest) scores to drop: "
 str5: .asciiz "Average (rounded down) with dropped scores removed: "
 space: .asciiz " "
 new_line: .asciiz "\n"
-str_all: .asciiz "All scores dropped!\n"
+str_all: .asciiz "All scores dropped!"
 
 .text 
 
@@ -85,24 +85,39 @@ valid_prompt:
 	# equals the number of scores. 
 	
 	slt $t0,$v0,$zero
-	bne $t1, $zero, valid_prompt
+	bne $t0, $zero, valid_prompt
 	slt $t0, $s0, $v0
-	bne $t1, $zero, valid_prompt
+	bne $t0, $zero, valid_prompt
 	beq $v0,$s0,equalScore
 	
 	
 	move $a1, $v0
 	sub $a1, $s0, $a1	# numScores - drop
+	addi $sp, $sp, -4
+	sw $a1, 0($sp)		# Save remaining count for average calculation
 	move $a0, $s2
 	jal calcSum	# Call calcSum to RECURSIVELY compute the sum of scores that are not dropped
 	
 	# Your code here to compute average and print it (you may also end up having some code here to help 
 	# handle the case when number of (lowest) scores to drop equals the number of scores
+	lw $t0, 0($sp)
+	addi $sp, $sp, 4
+	div $v0, $t0
+	mflo $t1
+	li $v0, 4
+	la $a0, str5
+	syscall
+	li $v0, 1
+	move $a0, $t1
+	syscall
+	beq $zero, $zero, end
+	
 equalScore:
 	li $v0,4
-    la $a0,str_all    
-    syscall
-    j end
+    	la $a0,str_all    
+   	syscall
+    	j end
+    
 end:	lw $ra, 0($sp)
 	addi $sp, $sp 4
 	li $v0, 10 
@@ -215,6 +230,31 @@ sel_done:
 # Note: you MUST NOT use iterative approach in this function.
 calcSum:
 	# Your implementation of calcSum here
+	addi $sp, $sp, -12
+	sw $ra, 8($sp)
+	sw $a0, 4($sp)
+	sw $a1, 0($sp)
+
+	slti $t0, $a1, 1	# if (len <= 0)
+	bne $t0, $zero, calc_base
+
+	addi $a1, $a1, -1
+	jal calcSum		# calcSum(arr, len - 1)
+
+	lw $a0, 4($sp)
+	lw $a1, 0($sp)
+	addi $t0, $a1, -1
+	sll $t0, $t0, 2
+	add $t1, $a0, $t0
+	lw $t2, 0($t1)		# arr[len - 1]
+	add $v0, $v0, $t2
+	j calc_done
+
+calc_base:
+	addi $v0, $zero, 0
 	
+calc_done:
+	lw $ra, 8($sp)
+	addi $sp, $sp, 12
 	jr $ra
 	
