@@ -65,13 +65,13 @@ loop_in:
 	li $v0, 4 
 	la $a0, str2 
 	syscall
-	move $a0, $s1	# More efficient than la $a0, orig
+	move $a0, $s1	
 	move $a1, $s0
 	jal printArray	# Print original scores
 	li $v0, 4 
 	la $a0, str3 
 	syscall 
-	move $a0, $s2	# More efficient than la $a0, sorted
+	move $a0, $s2	
 	jal printArray	# Print sorted scores
 
 valid_prompt:
@@ -133,8 +133,9 @@ printArray:
 	move $t2, $a1
 
 printing_loop:
-	bge $t1,$t2,post_print
-	lw $a0 0($t0)
+	slt $t3, $t1, $t2         
+	beq $t3, $zero, post_print 
+	lw $a0, 0($t0)
 	li $v0, 1
 	syscall
 
@@ -181,13 +182,13 @@ sort_setup:
 
 outer_loop:
 	addi $t3, $a0, -1
-	slt $t4, $t2, $t3	# while (i < len - 1)
+	slt $t4, $t2, $t3	# while (i<len-1)
 	beq $t4, $zero, sel_done
-	add $t5, $t2, $zero	# maxIndex = i
-	addi $t6, $t2, 1	# j = i + 1
+	add $t5, $t2, $zero	# maxIndex =i
+	addi $t6, $t2, 1	# j= i+1
 
 inner_loop:
-	slt $t3, $t6, $a0	# while (j < len)
+	slt $t3, $t6, $a0	# while (j<len)
 	beq $t3, $zero, do_swap
 	sll $t4, $t6, 2
 	add $t7, $t1, $t4
